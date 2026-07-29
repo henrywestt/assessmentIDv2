@@ -61,21 +61,45 @@ app/
   page.tsx        state, tabs, banner
   globals.css     design system (unchanged from the prototype)
 components/
-  Uploader.tsx    reads + parses the file in-browser
-  Ranking.tsx     ranked list with drill-down
+  Uploader.tsx    reads + parses the file in-browser (assessment + benchmarks)
+  Ranking.tsx     ranked list with drill-down + sub-metric sort
   Heatmap.tsx     objectives / all-metrics matrix
-  Compare.tsx     radar + objective bars
+  Compare.tsx     radar + objective bars + PowerPoint export
+  Benchmarks.tsx  rubric reference (sub-metric, question, scored bands)
 lib/
-  types.ts        shared types
-  parse.ts        parseWorkbook + buildModel (structural parser)
+  types.ts        shared types + the ENTITY label
+  parse.ts        parseWorkbook + buildModel + parseBenchmarks
   score.ts        colour scale + formatting
 data/
-  sample.ts       built-in Spark sample
+  sample.ts       built-in Spark sample (assessment + benchmarks)
 ```
+
+## Views
+
+- **Ranking** — properties ranked by overall, expand any row for the full breakdown.
+  Inside a row, sort the sub-metrics by Sheet order, High to low, or Low to high.
+- **Heatmap** — objectives or all metrics, coloured by score.
+- **Compare** — pick up to three, see the radar and objective scores.
+  **Export to PowerPoint** builds a .pptx with a native, editable radar chart plus a
+  scores table (pptxgenjs, loaded on demand so it stays out of the initial bundle).
+- **Benchmarks** — reference only. The rubric from the first sheet: each sub-metric,
+  its question, and the benchmark each score maps to. Hidden gracefully if the file
+  has no benchmarks sheet.
 
 ## Notes
 
+- The label for each scored entity is `ENTITY` in `lib/types.ts` (currently
+  "AssessmentID"). Change that one value to relabel every column, count, and picker.
 - Scale is detected from the data (0–5, 0–10, or higher). Par is the midpoint.
 - Metrics marked not-applicable are flagged and excluded from the score.
+- Every rollup is recomputed from raw scores; the sheet's own formula cells are ignored.
 - To add clipboard paste, listen for a `paste` event on `window` and pass any
   pasted file to the same `handleFile` in `Uploader.tsx`.
+
+## Exporting the radar to PowerPoint
+
+The Compare tab uses **pptxgenjs** to generate a native PowerPoint radar chart in the
+browser (no server, no image rasterisation). Because it is a real chart object, the
+slide is editable in PowerPoint: recolour series, restyle axes, or reuse it in a deck.
+If you would rather drop in a pixel-exact image of the on-screen radar instead, the SVG
+in `Compare.tsx` can be serialised to a PNG via a canvas and added with `slide.addImage`.

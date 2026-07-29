@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { Raw, Model, Metric, Score, OVERALL } from "./types";
+import { Raw, Model, Metric, Score, OVERALL, Benchmarks, BenchItem, Band } from "./types";
 
 // Thrown with a list of human-readable reasons the file didn't match the template.
 export class TemplateError extends Error {
@@ -160,4 +160,81 @@ export function buildModel(raw: Raw): Model {
 
 export function sortedProps(model: Model, key: string): string[] {
   return [...model.props].sort((a, b) => (model.roll[key][b] ?? -1) - (model.roll[key][a] ?? -1));
+}
+
+// Reads the rubric sheet (sub-metric, question, and the scored benchmark bands).
+// Each sub-metric is a description row followed by a score row. Returns null when
+// the workbook has no benchmarks sheet, so the Benchmarks tab can degrade gracefully.
+export function parseBenchmarks(wb: XLSX.WorkBook): Benchmarks | null {
+  const rxProp = /^\s*Property\s*:/i;
+  let best: Benchmarks | null = null;
+  let bestN = -1;
+
+  for (const name of wb.SheetNames) {
+    const A = XLSX.utils.sheet_to_json<Grid[number]>(wb.Sheets[name], {
+      header: 1,
+      raw: true,
+      defval: null,
+    }) as Grid;
+
+    // Skip the assessment sheet (it has Property: blocks).
+    let hasProp = false;
+    for (const r of A) for (const c of r || []) if (typeof c === "string" && rxProp.test(c)) hasProp = true;
+    if (hasProp) continue;
+
+    let labelRow = -1, objCol = -1, subCol = -1, qCol = -1, bandStart = -1;
+    for (let i = 0; i < A.length; i++) {
+      const r = A[i] || [];
+      const s = r.findIndex((x) => typeof x === "string" && /sub[-\s]?metric/i.test(x));
+      if (s > -1) {
+        labelRow = i;
+        subCol = s;
+        objCol = r.findIndex((x) => typeof x === "string" && /objective/i.test(x));
+        qCol = r.findIndex((x) => typeof x === "string" && /question/i.test(x));
+        bandStart = r.findIndex((x) => typeof x === "string" && /scorecard/i.test(x));
+        break;
+      }
+    }
+    if (labelRow < 0 || subCol < 0) continue;
+    if (bandStart < 0) bandStart = (qCol > -1 ? qCol : subCol) + 2;
+
+    const items: BenchItem[] = [];
+    let curObj: string | null = null;
+    for (let i = labelRow + 1; i < A.length; i++) {
+      const r = A[i] || [];
+      const o = r[objCol];
+      if (o != null && String(o).trim() !== "") curObj = String(o).trim();
+      const sub = r[subCol];
+      if (sub == null || String(sub).trim() === "") continue;
+
+      const scoreRow = A[i + 1] || [];
+      const bands: Band[] = [];
+      const mc = Math.max(r.length, scoreRow.length);
+      for (let c = bandStart; c < mc; c++) {
+        const label = r[c] != null ? String(r[c]).trim() : "";
+        const sc = scoreRow[c];
+        let score: Score = null;
+        if (typeof sc === "number") score = sc;
+        else if (sc != null && sc !== "" && !isNaN(parseFloat(String(sc)))) score = parseFloat(String(sc));
+        if (label !== "" || score != null) bands.push({ score, label });
+      }
+      if (bands.some((b) => b.score != null)) {
+        items.push({
+          o: curObj || "Ungrouped",
+          m: String(sub).trim(),
+          q: qCol > -1 && r[qCol] != null ? String(r[qCol]).trim() : "",
+          bands,
+        });
+      }
+    }
+
+    if (items.length > bestN) {
+      bestN = items.length;
+      const objOrder: string[] = [];
+      items.forEach((x) => { if (!objOrder.includes(x.o)) objOrder.push(x.o); });
+      best = { objOrder, items };
+    }
+  }
+
+  return best && best.items.length ? best : null;
 }

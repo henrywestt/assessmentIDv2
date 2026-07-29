@@ -48,12 +48,62 @@ function Radar({ model, sel }: { model: Model; sel: string[] }) {
   );
 }
 
-export default function Compare({ model }: { model: Model }) {
+export default function Compare({ model, exportName }: { model: Model; exportName: string }) {
   const order = sortedProps(model, OVERALL);
   const [sel, setSel] = useState<string[]>(order.slice(0, 2));
+  const [busy, setBusy] = useState(false);
 
   const toggle = (p: string) =>
     setSel((s) => (s.includes(p) ? s.filter((x) => x !== p) : s.length < 3 ? [...s, p] : s));
+
+  // Builds a native, editable PowerPoint radar chart from the current selection.
+  // pptxgenjs is loaded on demand so it never touches the initial bundle.
+  async function exportPptx() {
+    if (!sel.length) return;
+    setBusy(true);
+    try {
+      const PptxGen = (await import("pptxgenjs")).default;
+      const pptx = new PptxGen();
+      pptx.defineLayout({ name: "W", width: 13.33, height: 7.5 });
+      pptx.layout = "W";
+      const slide = pptx.addSlide();
+
+      slide.addText("Objective comparison", { x: 0.5, y: 0.4, w: 12, h: 0.6, fontSize: 26, bold: true, color: "16171B", fontFace: "Arial" });
+      slide.addText(sel.join("    •    "), { x: 0.5, y: 1.05, w: 12, h: 0.4, fontSize: 13, color: "565962", fontFace: "Arial" });
+
+      const chartData = sel.map((p) => ({
+        name: p,
+        labels: model.objOrder,
+        values: model.objOrder.map((o) => Number(((model.roll[o][p] ?? 0)).toFixed(2))),
+      }));
+      slide.addChart("radar", chartData, {
+        x: 0.6, y: 1.7, w: 7.2, h: 5.2,
+        radarStyle: "standard",
+        chartColors: sel.map((_, i) => COLORS[i].replace("#", "")),
+        showLegend: true, legendPos: "b", legendFontFace: "Arial", legendFontSize: 11,
+        valAxisMinVal: 0, valAxisMaxVal: model.scaleMax,
+        catAxisLabelFontSize: 11, catAxisLabelColor: "565962",
+        lineSize: 2,
+      });
+
+      // Objective scores table beside the chart, so the slide is self-contained.
+      const header = [{ text: "Objective", options: { bold: true, color: "FFFFFF", fill: { color: "0E6E68" } } },
+        ...sel.map((p) => ({ text: p, options: { bold: true, color: "FFFFFF", fill: { color: "0E6E68" } } }))];
+      const rows = [...model.objOrder, OVERALL].map((o) => ([
+        { text: o === OVERALL ? "Overall" : o, options: { bold: o === OVERALL } },
+        ...sel.map((p) => ({ text: fmt(model.roll[o][p]), options: { align: "center" as const, bold: o === OVERALL } })),
+      ]));
+      slide.addTable([header, ...rows], {
+        x: 8.1, y: 1.7, w: 4.7, colW: [2.1, ...sel.map(() => 2.6 / sel.length)],
+        fontSize: 11, fontFace: "Arial", border: { type: "solid", color: "E4E3DC", pt: 0.5 }, valign: "middle",
+      });
+
+      const safe = (exportName || "assessment").replace(/[^A-Za-z0-9-_]+/g, "-").replace(/^-+|-+$/g, "") || "assessment";
+      await pptx.writeFile({ fileName: `${safe}-comparison.pptx` });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <section>
@@ -82,7 +132,12 @@ export default function Compare({ model }: { model: Model }) {
       ) : (
         <div className="cmp-grid">
           <div className="radar-card">
-            <h3>Profile shape</h3>
+            <div className="radar-head">
+              <h3>Profile shape</h3>
+              <button className="btn ppt-btn" onClick={exportPptx} disabled={busy}>
+                {busy ? "Building…" : "Export to PowerPoint"}
+              </button>
+            </div>
             <Radar model={model} sel={sel} />
             <div className="legend">
               {sel.map((p, i) => (

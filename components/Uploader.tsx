@@ -1,11 +1,11 @@
 "use client";
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
-import { Raw } from "../lib/types";
-import { parseWorkbook, TemplateError } from "../lib/parse";
+import { Raw, Benchmarks } from "../lib/types";
+import { parseWorkbook, parseBenchmarks, TemplateError } from "../lib/parse";
 
 interface Props {
-  onLoaded: (raw: Raw, fileName: string) => void;
+  onLoaded: (raw: Raw, benchmarks: Benchmarks | null, fileName: string) => void;
   onError: (reasons: string[]) => void;
   onReset: () => void;
   showReset: boolean;
@@ -22,7 +22,8 @@ export default function Uploader({ onLoaded, onError, onReset, showReset }: Prop
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
         const raw = parseWorkbook(wb);
-        onLoaded(raw, f.name);
+        const benchmarks = parseBenchmarks(wb);
+        onLoaded(raw, benchmarks, f.name);
       } catch (err) {
         if (err instanceof TemplateError) onError(err.reasons);
         else onError([String((err as Error)?.message || err)]);

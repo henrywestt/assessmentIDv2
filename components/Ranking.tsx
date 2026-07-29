@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Model, OVERALL } from "../lib/types";
+import { Model, OVERALL, ENTITY } from "../lib/types";
 import { sortedProps } from "../lib/parse";
 import { fmt, shortLabel, scoreColor, scoreInk } from "../lib/score";
 
@@ -21,10 +21,24 @@ function Glyph({ model, p }: { model: Model; p: string }) {
   );
 }
 
+type SortMode = "default" | "desc" | "asc";
+
+function orderMetrics(list: Model["metrics"], p: string, mode: SortMode): Model["metrics"] {
+  if (mode === "default") return list;
+  const rank = (v: number | null) => (v == null ? (mode === "desc" ? -Infinity : Infinity) : v);
+  return [...list].sort((a, b) => (mode === "desc" ? rank(b.s[p]) - rank(a.s[p]) : rank(a.s[p]) - rank(b.s[p])));
+}
+
 function Detail({ model, p }: { model: Model; p: string }) {
+  const [sort, setSort] = useState<SortMode>("default");
   const scored = model.metrics.map((m) => ({ m: m.m, s: m.s[p] })).filter((x) => x.s != null) as { m: string; s: number }[];
   const top = [...scored].sort((a, b) => b.s - a.s).slice(0, 3);
   const bot = [...scored].sort((a, b) => a.s - b.s).slice(0, 3);
+  const modes: { k: SortMode; label: string }[] = [
+    { k: "default", label: "Sheet order" },
+    { k: "desc", label: "High to low" },
+    { k: "asc", label: "Low to high" },
+  ];
 
   return (
     <div className="detail-pad">
@@ -47,13 +61,20 @@ function Detail({ model, p }: { model: Model; p: string }) {
         </div>
       </div>
 
+      <div className="sub-controls detail-sort">
+        <span className="lbl">Sort sub-metrics</span>
+        {modes.map((mo) => (
+          <button key={mo.k} className={`chip ${sort === mo.k ? "on" : ""}`} onClick={() => setSort(mo.k)}>{mo.label}</button>
+        ))}
+      </div>
+
       {model.objOrder.map((o) => (
         <div className="obj-block" key={o}>
           <div className="obj-title">
             <span className="n">{o}</span>
             <span className="avg mono">{fmt(model.roll[o][p])}</span>
           </div>
-          {model.byObj[o].map((m) => {
+          {orderMetrics(model.byObj[o], p, sort).map((m) => {
             const v = m.s[p];
             const c = scoreColor(v, model.scaleMax);
             const cm = (m.c[p] || "").trim();
@@ -97,7 +118,7 @@ export default function Ranking({ model }: { model: Model }) {
 
       <div className="rank-head">
         <div>#</div>
-        <div>Property</div>
+        <div>{ENTITY}</div>
         <div>Overall</div>
         <div className="rk-cats">
           {model.objOrder.map((o) => <span key={o}>{shortLabel(o).slice(0, 5)}</span>)}

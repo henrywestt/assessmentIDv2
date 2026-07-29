@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Model, OVERALL } from "../lib/types";
+import { Model, OVERALL, ENTITY } from "../lib/types";
 import { sortedProps } from "../lib/parse";
 import { fmt, shortLabel, scoreColor } from "../lib/score";
 
@@ -25,7 +25,7 @@ export default function Heatmap({ model }: { model: Model }) {
             <>
               <thead>
                 <tr>
-                  <th className="p-lab">Property</th>
+                  <th className="p-lab">{ENTITY}</th>
                   {[...model.objOrder, OVERALL].map((c) => (
                     <th key={c}>{c === OVERALL ? "Overall" : shortLabel(c)}</th>
                   ))}
@@ -52,7 +52,7 @@ export default function Heatmap({ model }: { model: Model }) {
             <>
               <thead>
                 <tr>
-                  <th className="p-lab" rowSpan={2}>Property</th>
+                  <th className="p-lab" rowSpan={2}>{ENTITY}</th>
                   {model.objOrder.map((o) => (
                     <th key={o} className="grp" colSpan={model.byObj[o].length}>{shortLabel(o)}</th>
                   ))}

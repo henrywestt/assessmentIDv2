@@ -24,3 +24,25 @@ export interface Model {
 }
 
 export const OVERALL = "Overall Score";
+
+// User-facing label for each scored entity. The workbook calls these "properties";
+// change this one value to relabel every column header, picker, and count.
+export const ENTITY = "AssessmentID";
+export const ENTITY_PLURAL = "AssessmentIDs";
+
+export interface Band {
+  score: Score;
+  label: string;   // the benchmark description for this band
+}
+
+export interface BenchItem {
+  o: string;       // objective
+  m: string;       // sub-metric
+  q: string;       // question
+  bands: Band[];
+}
+
+export interface Benchmarks {
+  objOrder: string[];
+  items: BenchItem[];
+}
