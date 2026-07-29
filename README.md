@@ -18,8 +18,9 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. It loads a built-in sample on start. Use **Choose file**
-or drag a workbook onto the drop zone to render a different client.
+Open http://localhost:3000. It opens empty. Drag a workbook onto the drop zone or
+click **Choose file** to render it. No sample or client data ships in the app, so the
+landing page is never client-specific; data appears only after you load a workbook.
 
 ## Deploy to Vercel
 
@@ -70,8 +71,6 @@ lib/
   types.ts        shared types + the ENTITY label
   parse.ts        parseWorkbook + buildModel + parseBenchmarks
   score.ts        colour scale + formatting
-data/
-  sample.ts       built-in Spark sample (assessment + benchmarks)
 ```
 
 ## Views

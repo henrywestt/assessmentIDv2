@@ -7,11 +7,9 @@ import { parseWorkbook, parseBenchmarks, TemplateError } from "../lib/parse";
 interface Props {
   onLoaded: (raw: Raw, benchmarks: Benchmarks | null, fileName: string) => void;
   onError: (reasons: string[]) => void;
-  onReset: () => void;
-  showReset: boolean;
 }
 
-export default function Uploader({ onLoaded, onError, onReset, showReset }: Props) {
+export default function Uploader({ onLoaded, onError }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [hot, setHot] = useState(false);
 
@@ -51,7 +49,6 @@ export default function Uploader({ onLoaded, onError, onReset, showReset }: Prop
       </div>
       <div className="drop-actions">
         <button className="btn primary" onClick={() => inputRef.current?.click()}>Choose file</button>
-        {showReset && <button className="btn" onClick={onReset}>Sample</button>}
         <input
           ref={inputRef}
           type="file"
