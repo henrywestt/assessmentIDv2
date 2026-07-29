@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Raw, Model, Benchmarks, ENTITY_PLURAL } from "../lib/types";
+import { Raw, Model, Benchmarks } from "../lib/types";
 import { buildModel } from "../lib/parse";
 import Uploader from "../components/Uploader";
 import Ranking from "../components/Ranking";
@@ -32,7 +32,7 @@ export default function Page() {
     setSrc("Loaded from " + name + " · parsed in-browser");
     setView("rank");
     const m = buildModel(r);
-    setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} ${ENTITY_PLURAL} · ${m.metrics.length} metrics · ${m.objOrder.length} objectives · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
+    setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} Properties · ${m.objOrder.length} objectives · ${m.metrics.length} sub-metrics · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
   }
   function onError(reasons: string[]) {
     setBanner({ kind: "err", reasons });
@@ -46,13 +46,6 @@ export default function Page() {
             <div className="eyebrow">Bastion Commercial Strategy</div>
             <h1>{title}</h1>
           </div>
-          {model && (
-            <div className="scale-legend">
-              <span className="mono">weak</span>
-              <div className="scale-bar" title="score scale" />
-              <span className="mono">strong · 0–{model.scaleMax}</span>
-            </div>
-          )}
         </div>
         <p className="lede">
           Drop a framework workbook that follows the template and it renders here. Below par reads warm, above par reads cool. The file is parsed in your browser and never leaves this page.
@@ -73,19 +66,27 @@ export default function Page() {
 
         {model && (
           <div className="meta">
-            <span>{model.props.length} {ENTITY_PLURAL}</span>
-            <span>{model.metrics.length} metrics</span>
+            <span>{model.props.length} Properties</span>
             <span>{model.objOrder.length} objectives</span>
+            <span>{model.metrics.length} sub-metrics</span>
             <span>Scale 0–{model.scaleMax}</span>
           </div>
         )}
       </header>
 
+      {model && (
+        <div className="scale-row">
+          <span className="mono">weak</span>
+          <div className="scale-bar" title="score scale" />
+          <span className="mono">strong · 0–{model.scaleMax}</span>
+        </div>
+      )}
+
       <div className="controls">
         <div className="seg" role="tablist" aria-label="View">
           <button className={view === "rank" ? "on" : ""} role="tab" aria-selected={view === "rank"} disabled={!model} onClick={() => setView("rank")}>Ranking</button>
-          <button className={view === "heat" ? "on" : ""} role="tab" aria-selected={view === "heat"} disabled={!model} onClick={() => setView("heat")}>Heatmap</button>
           <button className={view === "cmp" ? "on" : ""} role="tab" aria-selected={view === "cmp"} disabled={!model} onClick={() => setView("cmp")}>Compare</button>
+          <button className={view === "heat" ? "on" : ""} role="tab" aria-selected={view === "heat"} disabled={!model} onClick={() => setView("heat")}>Heatmap</button>
           <button className={view === "bench" ? "on" : ""} role="tab" aria-selected={view === "bench"} disabled={!model} onClick={() => setView("bench")}>Benchmarks</button>
         </div>
       </div>
