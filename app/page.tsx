@@ -17,7 +17,7 @@ const SAMPLE_SRC = "Bastion · internal working view. Sample: Spark B2C framewor
 export default function Page() {
   const [raw, setRaw] = useState<Raw>(SAMPLE);
   const [benchmarks, setBenchmarks] = useState<Benchmarks | null>(SAMPLE_BENCHMARKS);
-  const [title, setTitle] = useState("Assessment comparison");
+  const [title, setTitle] = useState("AssessmentID");
   const [src, setSrc] = useState(SAMPLE_SRC);
   const [view, setView] = useState<View>("rank");
   const [banner, setBanner] = useState<Banner>(null);
@@ -43,7 +43,7 @@ export default function Page() {
   function onReset() {
     setRaw(SAMPLE);
     setBenchmarks(SAMPLE_BENCHMARKS);
-    setTitle("Assessment comparison");
+    setTitle("AssessmentID");
     setSrc(SAMPLE_SRC);
     setView("rank");
     setLoaded(false);
@@ -55,7 +55,7 @@ export default function Page() {
       <header>
         <div className="head-top">
           <div>
-            <div className="eyebrow">Sponsorship Assessment</div>
+            <div className="eyebrow">BASTION COMMERCIAL STRATEGY</div>
             <h1>{title}</h1>
           </div>
           <div className="scale-legend">
@@ -82,9 +82,9 @@ export default function Page() {
         )}
 
         <div className="meta">
-          <span>{model.props.length} {ENTITY_PLURAL}</span>
-          <span>{model.metrics.length} metrics</span>
+          <span>{model.props.length} properties</span>
           <span>{model.objOrder.length} objectives</span>
+          <span>{model.metrics.length} sub-metrics</span>
           <span>Scale 0–{model.scaleMax}</span>
         </div>
       </header>
