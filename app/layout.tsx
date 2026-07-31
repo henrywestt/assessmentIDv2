@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bastion Commercial Strategy · AssessmentID Visualiser",
+  title: "Bastion Commercial Strategy · AlignmentID Visualiser",
   description: "Drop a framework workbook and compare AssessmentIDs. Parsed in your browser, nothing is uploaded.",
 };
 

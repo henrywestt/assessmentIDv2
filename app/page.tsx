@@ -11,7 +11,7 @@ import BenchmarksView from "../components/Benchmarks";
 type View = "rank" | "heat" | "cmp" | "bench";
 type Banner = { kind: "ok" | "err"; reasons?: string[]; text?: string } | null;
 
-const LANDING_TITLE = "AssessmentID Visualiser";
+const LANDING_TITLE = "AlignmentID Visualiser";
 
 export default function Page() {
   const [raw, setRaw] = useState<Raw | null>(null);
@@ -48,7 +48,7 @@ export default function Page() {
           </div>
         </div>
         <p className="lede">
-          Drop a framework workbook that follows the template and it renders here. Below par reads warm, above par reads cool. The file is parsed in your browser and never leaves this page.
+          Upload a client's Excel framework using the template, and it will be visualised here. The data is processed securely for display purposes only and is not uploaded or stored.
         </p>
 
         <Uploader onLoaded={onLoaded} onError={onError} />
