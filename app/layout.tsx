@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bastion Commercial Strategy · AssessmentID Visualiser",
-  description: "Drop a framework workbook and compare AssessmentIDs. Parsed in your browser, nothing is uploaded.",
+  title: "Bastion Commercial Strategy · AlignmentID Visualiser",
+  description: "Upload a client's Excel framework using the template, and it will be visualised here. The data is processed securely for display purposes only and is not uploaded or stored.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
