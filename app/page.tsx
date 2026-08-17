@@ -7,8 +7,9 @@ import Ranking from "../components/Ranking";
 import Heatmap from "../components/Heatmap";
 import Compare from "../components/Compare";
 import BenchmarksView from "../components/Benchmarks";
+import Overview from "../components/Overview";
 
-type View = "rank" | "heat" | "cmp" | "bench";
+type View = "overview" | "rank" | "heat" | "cmp" | "bench";
 type Banner = { kind: "ok" | "err"; reasons?: string[]; text?: string } | null;
 
 const LANDING_TITLE = "AlignmentID Visualiser";
@@ -18,7 +19,7 @@ export default function Page() {
   const [benchmarks, setBenchmarks] = useState<Benchmarks | null>(null);
   const [title, setTitle] = useState(LANDING_TITLE);
   const [src, setSrc] = useState("");
-  const [view, setView] = useState<View>("rank");
+  const [view, setView] = useState<View>("overview");
   const [banner, setBanner] = useState<Banner>(null);
 
   // Model exists only once a workbook is loaded. Nothing client-specific ships in the bundle.
@@ -30,7 +31,7 @@ export default function Page() {
     setBenchmarks(b);
     setTitle(name.replace(/\.(xlsx|xlsm)$/i, ""));
     setSrc("Loaded from " + name + " · parsed in-browser");
-    setView("rank");
+    setView("overview");
     const m = buildModel(r);
     setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} Properties · ${m.objOrder.length} objectives · ${m.metrics.length} sub-metrics · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
   }
@@ -43,6 +44,7 @@ export default function Page() {
       <header>
         <div className="head-top">
           <div>
+            <img src="/bastion-logo.png" alt="Bastion" className="brand-logo" />
             <div className="eyebrow">Bastion Commercial Strategy</div>
             <h1>{title}</h1>
           </div>
@@ -84,6 +86,7 @@ export default function Page() {
 
       <div className="controls">
         <div className="seg" role="tablist" aria-label="View">
+          <button className={view === "overview" ? "on" : ""} role="tab" aria-selected={view === "overview"} disabled={!model} onClick={() => setView("overview")}>Overview</button>
           <button className={view === "rank" ? "on" : ""} role="tab" aria-selected={view === "rank"} disabled={!model} onClick={() => setView("rank")}>Ranking</button>
           <button className={view === "cmp" ? "on" : ""} role="tab" aria-selected={view === "cmp"} disabled={!model} onClick={() => setView("cmp")}>Compare</button>
           <button className={view === "heat" ? "on" : ""} role="tab" aria-selected={view === "heat"} disabled={!model} onClick={() => setView("heat")}>Heatmap</button>
@@ -93,8 +96,9 @@ export default function Page() {
 
       <main>
         {!model && (
-          <div className="empty-panel">Your ranking will appear here once you upload a workbook.</div>
+          <div className="empty-panel">Your overview will appear here once you upload a workbook.</div>
         )}
+        {model && view === "overview" && <Overview key={modelKey} model={model} />}
         {model && view === "rank" && <Ranking key={modelKey} model={model} />}
         {model && view === "heat" && <Heatmap key={modelKey} model={model} />}
         {model && view === "cmp" && <Compare key={modelKey} model={model} exportName={title} />}
