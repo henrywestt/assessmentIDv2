@@ -3,14 +3,10 @@ import { useMemo, useState } from "react";
 import { Raw, Model, Benchmarks } from "../lib/types";
 import { buildModel } from "../lib/parse";
 import Uploader from "../components/Uploader";
-import Ranking from "../components/Ranking";
-import Heatmap from "../components/Heatmap";
-import Compare from "../components/Compare";
-import BenchmarksView from "../components/Benchmarks";
-import Overview from "../components/Overview";
+import Viewer from "../components/Viewer";
 
-type View = "overview" | "rank" | "heat" | "cmp" | "bench";
 type Banner = { kind: "ok" | "err"; reasons?: string[]; text?: string } | null;
+type Share = { url: string; password: string } | null;
 
 const LANDING_TITLE = "AlignmentID Visualiser";
 
@@ -19,24 +15,53 @@ export default function Page() {
   const [benchmarks, setBenchmarks] = useState<Benchmarks | null>(null);
   const [title, setTitle] = useState(LANDING_TITLE);
   const [src, setSrc] = useState("");
-  const [view, setView] = useState<View>("overview");
   const [banner, setBanner] = useState<Banner>(null);
+
+  const [clientName, setClientName] = useState("");
+  const [days, setDays] = useState(30);
+  const [busy, setBusy] = useState(false);
+  const [share, setShare] = useState<Share>(null);
 
   // Model exists only once a workbook is loaded. Nothing client-specific ships in the bundle.
   const model: Model | null = useMemo(() => (raw ? buildModel(raw) : null), [raw]);
-  const modelKey = model ? title + ":" + model.props.length + ":" + model.metrics.length : "empty";
 
   function onLoaded(r: Raw, b: Benchmarks | null, name: string) {
     setRaw(r);
     setBenchmarks(b);
     setTitle(name.replace(/\.(xlsx|xlsm)$/i, ""));
     setSrc("Loaded from " + name + " · parsed in-browser");
-    setView("overview");
+    setShare(null);
     const m = buildModel(r);
     setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} Properties · ${m.objOrder.length} objectives · ${m.metrics.length} sub-metrics · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
   }
   function onError(reasons: string[]) {
     setBanner({ kind: "err", reasons });
+  }
+
+  async function createLink() {
+    if (!raw) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientName: clientName.trim() || title, title, raw, benchmarks, days }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not create link");
+      setShare({
+        url: `${window.location.origin}/c/${data.slug}`,
+        password: data.password,
+      });
+    } catch (e) {
+      setBanner({ kind: "err", reasons: [e instanceof Error ? e.message : String(e)] });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function copy(text: string) {
+    navigator.clipboard.writeText(text);
   }
 
   return (
@@ -50,7 +75,7 @@ export default function Page() {
           </div>
         </div>
         <p className="lede">
-          Upload a client's Excel framework using the template, and it will be visualised here. The data is processed securely for display purposes only and is not uploaded or stored.
+          Upload a client's Excel framework using the template, and it will be visualised here. The workbook itself is never uploaded or stored — a client link saves only the derived scores, and only when you create one.
         </p>
 
         <Uploader onLoaded={onLoaded} onError={onError} />
@@ -74,42 +99,53 @@ export default function Page() {
             <span>Scale 0–{model.scaleMax}</span>
           </div>
         )}
+
+        {model && (
+          <div className="share-panel">
+            {share ? (
+              <div className="share-result">
+                <div className="share-result-row">
+                  <span className="share-lbl">Link</span>
+                  <span className="mono share-value">{share.url}</span>
+                  <button className="btn" onClick={() => copy(share.url)}>Copy</button>
+                </div>
+                <div className="share-result-row">
+                  <span className="share-lbl">Password</span>
+                  <span className="mono share-value">{share.password}</span>
+                  <button className="btn" onClick={() => copy(share.password)}>Copy</button>
+                </div>
+                <p className="share-note">This password won’t be shown again — copy it now.</p>
+                <button className="btn" onClick={() => setShare(null)}>Create another link</button>
+              </div>
+            ) : (
+              <div className="share-create">
+                <input
+                  className="text-input"
+                  placeholder="Client name"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                />
+                <select className="text-input" value={days} onChange={(e) => setDays(Number(e.target.value))}>
+                  <option value={7}>Expires in 7 days</option>
+                  <option value={14}>Expires in 14 days</option>
+                  <option value={30}>Expires in 30 days</option>
+                  <option value={90}>Expires in 90 days</option>
+                </select>
+                <button className="btn primary" disabled={busy} onClick={createLink}>
+                  {busy ? "Creating…" : "Create client link"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
-      {model && (
-        <div className="scale-row">
-          <span className="mono">weak</span>
-          <div className="scale-bar" title="score scale" />
-          <span className="mono">strong · 0–{model.scaleMax}</span>
-        </div>
-      )}
+      {model && raw && <Viewer raw={raw} benchmarks={benchmarks} title={title} footNote={src} />}
 
-      <div className="controls">
-        <div className="seg" role="tablist" aria-label="View">
-          <button className={view === "overview" ? "on" : ""} role="tab" aria-selected={view === "overview"} disabled={!model} onClick={() => setView("overview")}>Overview</button>
-          <button className={view === "rank" ? "on" : ""} role="tab" aria-selected={view === "rank"} disabled={!model} onClick={() => setView("rank")}>Ranking</button>
-          <button className={view === "cmp" ? "on" : ""} role="tab" aria-selected={view === "cmp"} disabled={!model} onClick={() => setView("cmp")}>Compare</button>
-          <button className={view === "heat" ? "on" : ""} role="tab" aria-selected={view === "heat"} disabled={!model} onClick={() => setView("heat")}>Heatmap</button>
-          <button className={view === "bench" ? "on" : ""} role="tab" aria-selected={view === "bench"} disabled={!model} onClick={() => setView("bench")}>Benchmarks</button>
-        </div>
-      </div>
-
-      <main>
-        {!model && (
+      {!model && (
+        <main>
           <div className="empty-panel">Your overview will appear here once you upload a workbook.</div>
-        )}
-        {model && view === "overview" && <Overview key={modelKey} model={model} />}
-        {model && view === "rank" && <Ranking key={modelKey} model={model} />}
-        {model && view === "heat" && <Heatmap key={modelKey} model={model} />}
-        {model && view === "cmp" && <Compare key={modelKey} model={model} exportName={title} />}
-        {model && view === "bench" && <BenchmarksView benchmarks={benchmarks} scaleMax={model.scaleMax} />}
-      </main>
-
-      {model && (
-        <div className="foot">
-          <span>{src}</span>
-          <span className="mono">Par = {(model.scaleMax / 2).toFixed(1)} · overall = mean of objective scores</span>
-        </div>
+        </main>
       )}
     </>
   );

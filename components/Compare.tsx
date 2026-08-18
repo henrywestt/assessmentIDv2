@@ -48,7 +48,7 @@ function Radar({ model, sel }: { model: Model; sel: string[] }) {
   );
 }
 
-export default function Compare({ model, exportName }: { model: Model; exportName: string }) {
+export default function Compare({ model, exportName, readOnly = false }: { model: Model; exportName: string; readOnly?: boolean }) {
   const order = sortedProps(model, OVERALL);
   const [sel, setSel] = useState<string[]>(order.slice(0, 2));
   const [busy, setBusy] = useState(false);
@@ -134,9 +134,11 @@ export default function Compare({ model, exportName }: { model: Model; exportNam
           <div className="radar-card">
             <div className="radar-head">
               <h3>Profile shape</h3>
-              <button className="btn ppt-btn" onClick={exportPptx} disabled={busy}>
-                {busy ? "Building…" : "Export to PowerPoint"}
-              </button>
+              {!readOnly && (
+                <button className="btn ppt-btn" onClick={exportPptx} disabled={busy}>
+                  {busy ? "Building…" : "Export to PowerPoint"}
+                </button>
+              )}
             </div>
             <Radar model={model} sel={sel} />
             <div className="legend">

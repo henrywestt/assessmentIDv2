@@ -49,6 +49,24 @@
   .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;font-size:12px}
   .meta span{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);padding:4px 10px;border-radius:999px}
 
+  .text-input{font-family:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;outline:none}
+  .text-input:focus{border-color:var(--ink-faint)}
+
+  .share-panel{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .share-create{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .share-result{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:560px}
+  .share-result-row{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .share-lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;width:64px;flex-shrink:0}
+  .share-value{flex:1;font-size:12.5px;color:var(--ink);word-break:break-all}
+  .share-note{font-size:12px;color:var(--ink-faint);margin:8px 0 12px}
+
+  .unlock-panel{max-width:380px;margin:60px auto 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 26px}
+  .unlock-panel h1{font-size:19px;margin-bottom:4px}
+  .unlock-panel .lede{margin-top:0;margin-bottom:18px;font-size:13.5px}
+  .unlock-panel form{display:flex;flex-direction:column;gap:10px}
+  .unlock-panel .text-input{border-radius:8px}
+  .unlock-error{color:#8A4B18;font-size:12.5px;margin-top:2px}
+
   .controls{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:22px 0 18px;position:sticky;top:0;z-index:20;background:linear-gradient(var(--paper) 72%,rgba(244,244,241,0));padding:10px 0 12px}
   .seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
   .seg button{font-family:inherit;font-size:13px;font-weight:500;color:var(--ink-soft);background:none;border:none;cursor:pointer;padding:7px 15px;border-radius:999px;transition:color .15s,background .15s}
