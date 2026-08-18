@@ -33,6 +33,7 @@ export default async function ClientView({ params }: { params: { slug: string } 
       clientName={link.client_name}
       generatedAt={link.created_at}
       expiresAt={link.expires_at}
+      insights={link.snapshot.insights ?? {}}
     />
   );
 }

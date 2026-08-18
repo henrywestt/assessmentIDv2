@@ -46,3 +46,12 @@ export interface Benchmarks {
   objOrder: string[];
   items: BenchItem[];
 }
+
+// Staff-edited overrides for the four Overview insight sentences. A key present
+// means the staff edited it; absent means fall back to the auto-generated text.
+export interface Insights {
+  top?: string;
+  strength?: string;
+  gap?: string;
+  benchmark?: string;
+}

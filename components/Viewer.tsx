@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Raw, Benchmarks, Model } from "../lib/types";
+import { Raw, Benchmarks, Model, Insights } from "../lib/types";
 import { buildModel } from "../lib/parse";
 import { fmtDate } from "../lib/format";
 import Overview from "./Overview";
@@ -14,9 +14,11 @@ type View = "overview" | "rank" | "heat" | "cmp" | "bench";
 export default function Viewer({
   raw, benchmarks, title, readOnly = false, footNote = "",
   clientName, generatedAt, expiresAt,
+  insights, onInsightsChange,
 }: {
   raw: Raw; benchmarks: Benchmarks | null; title: string; readOnly?: boolean; footNote?: string;
   clientName?: string; generatedAt?: string; expiresAt?: string;
+  insights?: Insights; onInsightsChange?: (insights: Insights) => void;
 }) {
   const [view, setView] = useState<View>("overview");
   const model: Model = useMemo(() => buildModel(raw), [raw]);
@@ -56,7 +58,15 @@ export default function Viewer({
       </div>
 
       <main>
-        {view === "overview" && <Overview key={modelKey} model={model} />}
+        {view === "overview" && (
+          <Overview
+            key={modelKey}
+            model={model}
+            readOnly={readOnly}
+            insights={insights}
+            onInsightsChange={onInsightsChange}
+          />
+        )}
         {view === "rank" && <Ranking key={modelKey} model={model} />}
         {view === "heat" && <Heatmap key={modelKey} model={model} />}
         {view === "cmp" && <Compare key={modelKey} model={model} exportName={title} readOnly={readOnly} />}

@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Raw, Model, Benchmarks } from "../lib/types";
+import { Raw, Model, Benchmarks, Insights } from "../lib/types";
 import { buildModel } from "../lib/parse";
 import Uploader from "../components/Uploader";
 import Viewer from "../components/Viewer";
@@ -16,6 +16,7 @@ export default function Page() {
   const [title, setTitle] = useState(LANDING_TITLE);
   const [src, setSrc] = useState("");
   const [banner, setBanner] = useState<Banner>(null);
+  const [insights, setInsights] = useState<Insights>({});
 
   const [clientName, setClientName] = useState("");
   const [days, setDays] = useState(30);
@@ -31,6 +32,7 @@ export default function Page() {
     setTitle(name.replace(/\.(xlsx|xlsm)$/i, ""));
     setSrc("Loaded from " + name + " · parsed in-browser");
     setShare(null);
+    setInsights({});
     const m = buildModel(r);
     setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} Properties · ${m.objOrder.length} objectives · ${m.metrics.length} sub-metrics · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
   }
@@ -45,7 +47,7 @@ export default function Page() {
       const res = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientName: clientName.trim() || title, title, raw, benchmarks, days }),
+        body: JSON.stringify({ clientName: clientName.trim() || title, title, raw, benchmarks, insights, days }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not create link");
@@ -141,7 +143,16 @@ export default function Page() {
         )}
       </header>
 
-      {model && raw && <Viewer raw={raw} benchmarks={benchmarks} title={title} footNote={src} />}
+      {model && raw && (
+        <Viewer
+          raw={raw}
+          benchmarks={benchmarks}
+          title={title}
+          footNote={src}
+          insights={insights}
+          onInsightsChange={setInsights}
+        />
+      )}
 
       {!model && (
         <main>

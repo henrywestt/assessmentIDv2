@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const { clientName, title, raw, benchmarks, days } = await req.json();
+  const { clientName, title, raw, benchmarks, insights, days } = await req.json();
 
   if (!clientName || !raw) {
     return NextResponse.json({ error: "Missing data" }, { status: 400 });
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     slug,
     client_name: clientName,
     title: title || clientName,
-    snapshot: { raw, benchmarks: benchmarks ?? null },
+    snapshot: { raw, benchmarks: benchmarks ?? null, insights: insights ?? null },
     password_hash,
     expires_at,
   });
