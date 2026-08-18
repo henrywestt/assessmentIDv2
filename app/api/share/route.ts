@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     slug,
     client_name: clientName,
     title: title || clientName,
-    snapshot: { raw, benchmarks: benchmarks ?? null, insights: insights ?? null },
+    snapshot: { raw, benchmarks: benchmarks ?? null, insights: Array.isArray(insights) ? insights : [] },
     password_hash,
     expires_at,
   });

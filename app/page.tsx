@@ -1,7 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Raw, Model, Benchmarks, Insights } from "../lib/types";
+import { Raw, Model, Benchmarks } from "../lib/types";
 import { buildModel } from "../lib/parse";
+import { Insight, resolveInsights } from "../lib/insights";
 import Uploader from "../components/Uploader";
 import Viewer from "../components/Viewer";
 
@@ -16,7 +17,9 @@ export default function Page() {
   const [title, setTitle] = useState(LANDING_TITLE);
   const [src, setSrc] = useState("");
   const [banner, setBanner] = useState<Banner>(null);
-  const [insights, setInsights] = useState<Insights>({});
+  // undefined = "use the auto-generated defaults"; a concrete array (even []) means
+  // the staff has customized insights via the editor and that exact list is final.
+  const [insights, setInsights] = useState<Insight[] | undefined>(undefined);
 
   const [clientName, setClientName] = useState("");
   const [days, setDays] = useState(30);
@@ -32,7 +35,7 @@ export default function Page() {
     setTitle(name.replace(/\.(xlsx|xlsm)$/i, ""));
     setSrc("Loaded from " + name + " · parsed in-browser");
     setShare(null);
-    setInsights({});
+    setInsights(undefined);
     const m = buildModel(r);
     setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} Properties · ${m.objOrder.length} objectives · ${m.metrics.length} sub-metrics · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
   }
@@ -41,13 +44,16 @@ export default function Page() {
   }
 
   async function createLink() {
-    if (!raw) return;
+    if (!raw || !model) return;
     setBusy(true);
     try {
       const res = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientName: clientName.trim() || title, title, raw, benchmarks, insights, days }),
+        body: JSON.stringify({
+          clientName: clientName.trim() || title, title, raw, benchmarks, days,
+          insights: resolveInsights(insights, model),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not create link");
@@ -151,6 +157,7 @@ export default function Page() {
           footNote={src}
           insights={insights}
           onInsightsChange={setInsights}
+          onInsightsReset={() => setInsights(undefined)}
         />
       )}
 

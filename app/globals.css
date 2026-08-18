@@ -204,22 +204,36 @@
 /* Bastion logo in header */
 .brand-logo{height:30px;width:auto;display:block;margin-bottom:16px}
 
-/* Overview tab */
+/* Overview tab — editable insights */
 .ov-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .ov-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:9px;min-height:140px}
-.ov-card .k,.ov-card .ov-tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase}
-.ov-card .k{color:var(--ink-faint)}
-.ov-card .ov-tag{align-self:flex-start;background:var(--brand-yellow);color:#141414;font-weight:600;padding:3px 9px;border-radius:999px}
-.ov-card .v{font-family:var(--font-sans);font-weight:700;font-size:clamp(22px,2.8vw,30px);line-height:1.06;letter-spacing:-0.02em}
-.ov-card .v .v-sub{color:var(--ink-faint);font-weight:600;font-size:.6em}
-.ov-card .d{font-size:13px;color:var(--ink-soft);line-height:1.4;margin-top:auto}
-.ov-card .d-editable{cursor:text}
-.ov-card .d-editable:hover{text-decoration:underline dotted;text-underline-offset:2px}
-.ov-card .d-pencil{font-size:10px;color:var(--ink-faint);opacity:.65;margin-left:4px}
-.ov-card .d-revert{font-family:inherit;font-size:11px;font-weight:500;color:var(--teal-deep);background:none;border:none;cursor:pointer;padding:0;margin-left:8px;vertical-align:baseline}
-.ov-card .d-revert:hover{text-decoration:underline}
-.ov-card .d-edit{width:100%;font-family:inherit;font-size:13px;color:var(--ink);line-height:1.4;border:1px solid var(--ink-faint);border-radius:8px;padding:8px 10px;resize:vertical;min-height:52px;background:var(--paper);margin-top:auto}
-.ov-card .d-edit:focus{outline:none;border-color:var(--ink)}
+.ins-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.ins-card{box-shadow:inset 4px 0 0 0 var(--ins-accent, transparent)}
+.ins-heading{font-family:var(--font-sans);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:var(--ink);margin:0}
+.ins-body{font-size:13px;color:var(--ink-soft);line-height:1.45;margin:0 0 auto}
+.ins-body em,.ins-heading em{font-style:italic}
+.ins-body strong,.ins-heading strong{font-weight:700}
+.ins-editable{cursor:text}
+.ins-editable:hover{text-decoration:underline dotted;text-underline-offset:2px}
+.ins-pencil{font-size:10px;color:var(--ink-faint);opacity:.65;margin-left:5px}
+.ins-edit{width:100%;font-family:inherit;color:var(--ink);border:1px solid var(--ink-faint);border-radius:8px;background:var(--paper)}
+.ins-edit:focus{outline:none;border-color:var(--ink)}
+.ins-edit-heading{font-size:15px;font-weight:700;padding:6px 9px}
+.ins-edit-body{font-size:13px;line-height:1.45;padding:8px 10px;resize:vertical;min-height:60px}
+
+.ins-card-controls{margin-top:auto;padding-top:10px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ins-swatches{display:flex;gap:5px}
+.ins-swatch{width:16px;height:16px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0}
+.ins-swatch.on{outline:2px solid var(--ink);outline-offset:1px}
+.ins-order-controls{display:flex;align-items:center;gap:2px}
+.ins-icon-btn{font-family:inherit;font-size:12px;color:var(--ink-soft);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:5px}
+.ins-icon-btn:hover{background:var(--paper);color:var(--ink)}
+.ins-icon-btn:disabled{opacity:.3;cursor:default}
+.ins-icon-btn:disabled:hover{background:none}
+.ins-delete{font-size:11px}
+
+.ins-toolbar{display:flex;gap:8px;margin-bottom:10px}
+.ins-hint{font-size:11.5px;color:var(--ink-faint);margin-bottom:14px}
 
 /* links dashboard */
 .links-tbl-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}

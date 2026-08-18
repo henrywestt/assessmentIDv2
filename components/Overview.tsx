@@ -1,128 +1,174 @@
 "use client";
-import { useState } from "react";
-import { Model, OVERALL, Insights } from "../lib/types";
-import { sortedProps } from "../lib/parse";
-import { fmt, scoreInk } from "../lib/score";
+import { useState, type CSSProperties } from "react";
+import { Insight, COLOUR_OPTIONS, colourVar, makeInsightId } from "../lib/insights";
+import Formatted from "./Formatted";
+
+type Field = "heading" | "body";
 
 export default function Overview({
-  model, readOnly = false, insights = {}, onInsightsChange,
+  readOnly = false, insights, onInsightsChange, onReset,
 }: {
-  model: Model;
   readOnly?: boolean;
-  insights?: Insights;
-  onInsightsChange?: (insights: Insights) => void;
+  insights: Insight[];
+  onInsightsChange?: (insights: Insight[]) => void;
+  onReset?: () => void;
 }) {
-  const par = model.scaleMax / 2;
-  const [editingKey, setEditingKey] = useState<keyof Insights | null>(null);
+  const [editing, setEditing] = useState<{ id: string; field: Field } | null>(null);
   const [draft, setDraft] = useState("");
 
-  function commit(key: keyof Insights, defaultText: string) {
-    const trimmed = draft.trim();
-    setEditingKey(null);
-    if (!onInsightsChange) return;
-    const next = { ...insights };
-    if (!trimmed || trimmed === defaultText) delete next[key];
-    else next[key] = trimmed;
-    onInsightsChange(next);
+  if (readOnly && insights.length === 0) return null;
+
+  function startEdit(id: string, field: Field, value: string) {
+    setEditing({ id, field });
+    setDraft(value);
   }
 
-  function revert(key: keyof Insights) {
-    if (!onInsightsChange) return;
-    const next = { ...insights };
-    delete next[key];
-    onInsightsChange(next);
+  function commitEdit() {
+    if (!editing) return;
+    const { id, field } = editing;
+    const next = insights.map((ins) => (ins.id === id ? { ...ins, [field]: draft } : ins));
+    setEditing(null);
+    onInsightsChange?.(next);
   }
 
-  function renderInsight(key: keyof Insights, defaultText: string) {
-    const override = insights[key];
-    const text = override ?? defaultText;
+  function cancelEdit() {
+    setEditing(null);
+  }
 
-    if (readOnly) return <span className="d">{text}</span>;
+  function addInsight() {
+    const id = makeInsightId();
+    const next = [...insights, { id, heading: "New insight", body: "Click to edit.", colour: "default" }];
+    onInsightsChange?.(next);
+    setEditing({ id, field: "heading" });
+    setDraft("New insight");
+  }
 
-    if (editingKey === key) {
+  function deleteInsight(id: string) {
+    if (!confirm("Delete this insight?")) return;
+    onInsightsChange?.(insights.filter((ins) => ins.id !== id));
+  }
+
+  function move(id: string, dir: -1 | 1) {
+    const idx = insights.findIndex((ins) => ins.id === id);
+    const swapWith = idx + dir;
+    if (idx < 0 || swapWith < 0 || swapWith >= insights.length) return;
+    const next = insights.slice();
+    [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+    onInsightsChange?.(next);
+  }
+
+  function setColour(id: string, colour: string) {
+    onInsightsChange?.(insights.map((ins) => (ins.id === id ? { ...ins, colour } : ins)));
+  }
+
+  function resetAll() {
+    if (!confirm("Reset all insights to the auto-generated defaults? Your edits will be lost.")) return;
+    onReset?.();
+  }
+
+  function renderField(ins: Insight, field: Field) {
+    const value = ins[field];
+    const isEditing = editing?.id === ins.id && editing.field === field;
+    const Tag = field === "heading" ? "h3" : "p";
+    const cls = field === "heading" ? "ins-heading" : "ins-body";
+
+    if (readOnly) {
+      return <Tag className={cls}><Formatted text={value} /></Tag>;
+    }
+
+    if (isEditing) {
+      if (field === "heading") {
+        return (
+          <input
+            className="ins-edit ins-edit-heading"
+            value={draft}
+            autoFocus
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commitEdit(); }
+              if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+            }}
+          />
+        );
+      }
       return (
         <textarea
-          className="d-edit"
+          className="ins-edit ins-edit-body"
           value={draft}
           autoFocus
-          rows={2}
+          rows={3}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={() => commit(key, defaultText)}
+          onBlur={commitEdit}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit(key, defaultText); }
-            if (e.key === "Escape") { e.preventDefault(); setEditingKey(null); }
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commitEdit(); }
+            if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
           }}
         />
       );
     }
 
     return (
-      <span className="d d-editable" onClick={() => { setDraft(text); setEditingKey(key); }}>
-        {text}
-        <span className="d-pencil" aria-hidden="true">✎</span>
-        {override !== undefined && (
-          <button
-            type="button"
-            className="d-revert"
-            title="Revert to auto-generated text"
-            onClick={(e) => { e.stopPropagation(); revert(key); }}
-          >
-            Revert
-          </button>
-        )}
-      </span>
+      <Tag className={`${cls} ins-editable`} onClick={() => startEdit(ins.id, field, value)}>
+        <Formatted text={value} />
+        <span className="ins-pencil" aria-hidden="true">✎</span>
+      </Tag>
     );
   }
 
-  // 1. Strongest partnership
-  const ranked = sortedProps(model, OVERALL);
-  const top = ranked[0];
-  const topScore = model.roll[OVERALL][top];
-
-  // Objective averages across all properties
-  const objAvg = model.objOrder.map((o) => {
-    const vs = model.props.map((p) => model.roll[o][p]).filter((v): v is number => typeof v === "number");
-    return { o, avg: vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null };
-  });
-  const withVals = objAvg.filter((x) => x.avg != null) as { o: string; avg: number }[];
-  const strongestObj = withVals.slice().sort((a, b) => b.avg - a.avg)[0];
-  const weakestObj = withVals.slice().sort((a, b) => a.avg - b.avg)[0];
-
-  // 4. Above benchmark
-  const scored = model.props.map((p) => model.roll[OVERALL][p]).filter((v): v is number => typeof v === "number");
-  const abovePar = scored.filter((v) => v > par).length;
-
   return (
     <section>
-      <div className="ov-grid">
-        <div className="ov-card">
-          <span className="ov-tag">Top ranked</span>
-          <span className="v" style={{ color: scoreInk(topScore, model.scaleMax) }}>{top}</span>
-          {renderInsight("top", `Highest overall at ${fmt(topScore)} out of ${model.scaleMax}.`)}
-        </div>
+      {!readOnly && (
+        <>
+          <div className="ins-toolbar">
+            <button type="button" className="btn" onClick={addInsight}>+ Add insight</button>
+            <button type="button" className="btn" onClick={resetAll}>Reset to auto-generated</button>
+          </div>
+          <p className="ins-hint">Formatting: **bold** and *italic*.</p>
+        </>
+      )}
 
-        <div className="ov-card">
-          <span className="k">Portfolio strength</span>
-          <span className="v" style={{ color: strongestObj ? scoreInk(strongestObj.avg, model.scaleMax) : undefined }}>
-            {strongestObj ? strongestObj.o : "–"}
-          </span>
-          {renderInsight("strength", `Strongest objective, averaging ${strongestObj ? fmt(strongestObj.avg) : "–"} across the portfolio.`)}
-        </div>
+      {insights.length > 0 && (
+        <div className="ov-grid ins-grid">
+          {insights.map((ins, idx) => {
+            const accent = colourVar(ins.colour);
+            const cardStyle = accent ? ({ "--ins-accent": accent } as CSSProperties) : undefined;
+            return (
+              <div key={ins.id} className="ov-card ins-card" style={cardStyle}>
+                {renderField(ins, "heading")}
+                {renderField(ins, "body")}
 
-        <div className="ov-card">
-          <span className="k">Biggest gap</span>
-          <span className="v" style={{ color: weakestObj ? scoreInk(weakestObj.avg, model.scaleMax) : undefined }}>
-            {weakestObj ? weakestObj.o : "–"}
-          </span>
-          {renderInsight("gap", `Weakest objective, averaging ${weakestObj ? fmt(weakestObj.avg) : "–"}. The clearest place to focus.`)}
+                {!readOnly && (
+                  <div className="ins-card-controls">
+                    <div className="ins-swatches">
+                      {COLOUR_OPTIONS.map((c) => (
+                        <button
+                          key={c.token}
+                          type="button"
+                          title={c.label}
+                          aria-label={c.label}
+                          className={`ins-swatch ${ins.colour === c.token ? "on" : ""}`}
+                          style={{ background: colourVar(c.token) || "var(--card)" }}
+                          onClick={() => setColour(ins.id, c.token)}
+                        />
+                      ))}
+                    </div>
+                    <div className="ins-order-controls">
+                      <button type="button" className="ins-icon-btn" disabled={idx === 0} onClick={() => move(ins.id, -1)} title="Move up">↑</button>
+                      <button type="button" className="ins-icon-btn" disabled={idx === insights.length - 1} onClick={() => move(ins.id, 1)} title="Move down">↓</button>
+                      <button type="button" className="ins-icon-btn ins-delete" onClick={() => deleteInsight(ins.id)} title="Delete insight">Delete</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+      )}
 
-        <div className="ov-card">
-          <span className="k">Above benchmark</span>
-          <span className="v">{abovePar}<span className="v-sub"> / {model.props.length}</span></span>
-          {renderInsight("benchmark", `Properties scoring above par (${fmt(par)}) overall.`)}
-        </div>
-      </div>
+      {!readOnly && insights.length === 0 && (
+        <div className="empty-panel">No insights yet — add one above.</div>
+      )}
     </section>
   );
 }
