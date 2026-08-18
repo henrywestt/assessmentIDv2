@@ -31,6 +31,7 @@ export default async function LinksPage() {
           <a className="btn" href="/">← Back to viewer</a>
         </div>
         <p className="lede">Every link that's been created, newest first. Revoke a link to cut off access immediately.</p>
+        <p className="share-note">Passwords are hashed and can't be retrieved — use Reset password to issue a new one if a client loses theirs.</p>
       </header>
 
       <main>

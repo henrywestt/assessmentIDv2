@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { db } from "../../../lib/db";
-import { signToken } from "../../../lib/auth";
+import { signToken, fingerprint } from "../../../lib/auth";
 
 export async function POST(req: Request) {
   const { slug, password } = await req.json();
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 
-  const token = await signToken({ slug }, 60 * 60 * 8);
+  const token = await signToken({ slug, ph: fingerprint(link.password_hash) }, 60 * 60 * 8);
   cookies().set(`v_${slug}`, token, {
     httpOnly: true,
     secure: true,
