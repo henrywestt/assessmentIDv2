@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { Raw, Benchmarks, Model } from "../lib/types";
 import { buildModel } from "../lib/parse";
+import { fmtDate } from "../lib/format";
 import Overview from "./Overview";
 import Ranking from "./Ranking";
 import Heatmap from "./Heatmap";
@@ -12,7 +13,11 @@ type View = "overview" | "rank" | "heat" | "cmp" | "bench";
 
 export default function Viewer({
   raw, benchmarks, title, readOnly = false, footNote = "",
-}: { raw: Raw; benchmarks: Benchmarks | null; title: string; readOnly?: boolean; footNote?: string }) {
+  clientName, generatedAt, expiresAt,
+}: {
+  raw: Raw; benchmarks: Benchmarks | null; title: string; readOnly?: boolean; footNote?: string;
+  clientName?: string; generatedAt?: string; expiresAt?: string;
+}) {
   const [view, setView] = useState<View>("overview");
   const model: Model = useMemo(() => buildModel(raw), [raw]);
   const modelKey = title + ":" + model.props.length + ":" + model.metrics.length;
@@ -47,6 +52,13 @@ export default function Viewer({
         <span>{footNote}</span>
         <span className="mono">Par = {(model.scaleMax / 2).toFixed(1)} · overall = mean of objective scores</span>
       </div>
+
+      {readOnly && clientName && (
+        <div className="watermark">
+          Prepared for {clientName} · Generated {fmtDate(generatedAt)}
+          {expiresAt ? ` · Expires ${fmtDate(expiresAt)}` : ""}
+        </div>
+      )}
     </>
   );
 }

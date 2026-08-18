@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { fmtDate } from "../lib/format";
 
-export default function Unlock({ slug, clientName }: { slug: string; clientName: string }) {
+export default function Unlock({ slug, clientName, expiresAt }: { slug: string; clientName: string; expiresAt: string }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,6 +34,7 @@ export default function Unlock({ slug, clientName }: { slug: string; clientName:
       <img src="/bastion-logo.png" alt="Bastion" className="brand-logo" />
       <h1>{clientName}</h1>
       <p className="lede">Enter the password you were given to view this assessment.</p>
+      <p className="unlock-expiry">This link expires {fmtDate(expiresAt)}.</p>
       <form onSubmit={submit}>
         <input
           className="text-input"

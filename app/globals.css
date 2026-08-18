@@ -229,3 +229,10 @@
 .links-actions{display:flex;gap:6px}
 .links-actions .btn{padding:6px 12px;font-size:12px}
 @media (max-width:640px){.ov-grid{grid-template-columns:1fr}}
+
+/* client-view watermark */
+.watermark{position:fixed;bottom:16px;right:16px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);background:var(--card);border:1px solid var(--line);padding:5px 12px;border-radius:999px;opacity:.9;pointer-events:none;z-index:30;box-shadow:var(--shadow)}
+@media (max-width:720px){.watermark{left:16px;right:16px;text-align:center;bottom:10px}}
+
+/* unlock screen expiry note */
+.unlock-expiry{font-size:12px;color:var(--ink-faint);margin:-10px 0 16px}

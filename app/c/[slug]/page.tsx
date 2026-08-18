@@ -21,7 +21,7 @@ export default async function ClientView({ params }: { params: { slug: string } 
   const payload = token ? await verifyToken(token) : null;
 
   if (!payload || payload.slug !== params.slug) {
-    return <Unlock slug={params.slug} clientName={link.client_name} />;
+    return <Unlock slug={params.slug} clientName={link.client_name} expiresAt={link.expires_at} />;
   }
 
   return (
@@ -30,6 +30,9 @@ export default async function ClientView({ params }: { params: { slug: string } 
       benchmarks={link.snapshot.benchmarks}
       title={link.title}
       readOnly
+      clientName={link.client_name}
+      generatedAt={link.created_at}
+      expiresAt={link.expires_at}
     />
   );
 }

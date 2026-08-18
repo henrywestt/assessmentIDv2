@@ -1,17 +1,9 @@
 import { headers } from "next/headers";
 import { db } from "../../lib/db";
+import { fmtDate } from "../../lib/format";
 import LinkRowActions from "../../components/LinkRowActions";
 
 export const dynamic = "force-dynamic";
-
-function fmtDate(iso: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = d.toLocaleString("en-US", { month: "short" });
-  const year = d.getFullYear();
-  return `${day} ${month} ${year}`;
-}
 
 export default async function LinksPage() {
   const { data: links } = await db
