@@ -24,6 +24,21 @@ export default function Viewer({
 
   return (
     <>
+      {readOnly && clientName && (
+        <header>
+          <div className="head-top">
+            <div>
+              <img src="/bastion-logo.png" alt="Bastion" className="brand-logo" />
+              <div className="eyebrow">Bastion Commercial Strategy</div>
+              <h1>{clientName} AlignmentID Visualiser</h1>
+            </div>
+          </div>
+          <p className="lede-wide">
+            AlignmentID scores each property against the objectives and sub-metrics agreed with {clientName}, on a shared 0–{model.scaleMax} scale. Use the tabs below to move between an overview, a full ranking, a heatmap across every metric, and head-to-head comparisons between properties.
+          </p>
+        </header>
+      )}
+
       <div className="scale-row">
         <span className="mono">weak</span>
         <div className="scale-bar" title="score scale" />
