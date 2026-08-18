@@ -73,6 +73,7 @@ export default function Page() {
             <div className="eyebrow">Bastion Commercial Strategy</div>
             <h1>{title}</h1>
           </div>
+          <a className="btn" href="/links">Client links →</a>
         </div>
         <p className="lede">
           Upload a client's Excel framework using the template, and it will be visualised here. The workbook itself is never uploaded or stored — a client link saves only the derived scores, and only when you create one.

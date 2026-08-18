@@ -213,4 +213,19 @@
 .ov-card .v{font-family:var(--font-sans);font-weight:700;font-size:clamp(22px,2.8vw,30px);line-height:1.06;letter-spacing:-0.02em}
 .ov-card .v .v-sub{color:var(--ink-faint);font-weight:600;font-size:.6em}
 .ov-card .d{font-size:13px;color:var(--ink-soft);line-height:1.4;margin-top:auto}
+
+/* links dashboard */
+.links-tbl-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.links-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.links-tbl th{text-align:left;padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);border-bottom:1px solid var(--line);white-space:nowrap}
+.links-tbl td{padding:12px 14px;border-bottom:1px solid var(--line-soft);white-space:nowrap;vertical-align:middle}
+.links-tbl tbody tr:last-child td{border-bottom:none}
+.links-tbl tr.muted{opacity:.45}
+.links-tbl td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft)}
+.status-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line)}
+.status-badge.status-live{background:#E9F1EF;color:var(--teal-deep);border-color:#CBE0DC}
+.status-badge.status-expired{background:var(--paper);color:var(--ink-faint)}
+.status-badge.status-revoked{background:#FBEEE3;color:#8A4B18;border-color:#EED6BE}
+.links-actions{display:flex;gap:6px}
+.links-actions .btn{padding:6px 12px;font-size:12px}
 @media (max-width:640px){.ov-grid{grid-template-columns:1fr}}
