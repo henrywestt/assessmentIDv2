@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Raw, Model, Benchmarks } from "../lib/types";
 import { buildModel } from "../lib/parse";
 import { Insight, resolveInsights } from "../lib/insights";
@@ -26,8 +26,37 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [share, setShare] = useState<Share>(null);
 
+  // Update mode: present when the page was reached via /?update={slug}.
+  const [updateSlug, setUpdateSlug] = useState<string | null>(null);
+  const [updateClientName, setUpdateClientName] = useState("");
+  const [carriedInsights, setCarriedInsights] = useState<Insight[]>([]);
+  const [oldPropsCount, setOldPropsCount] = useState(0);
+  const [resetInsightsOnUpdate, setResetInsightsOnUpdate] = useState(false);
+  const [updateDone, setUpdateDone] = useState(false);
+
   // Model exists only once a workbook is loaded. Nothing client-specific ships in the bundle.
   const model: Model | null = useMemo(() => (raw ? buildModel(raw) : null), [raw]);
+
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("update");
+    if (!slug) return;
+    setUpdateSlug(slug);
+    fetch(`/api/share/${slug}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not load that link");
+        return res.json();
+      })
+      .then((data) => {
+        setUpdateClientName(data.clientName || "");
+        const carried = Array.isArray(data.insights) ? data.insights : [];
+        setCarriedInsights(carried);
+        setOldPropsCount(typeof data.propsCount === "number" ? data.propsCount : 0);
+        setInsights(carried);
+      })
+      .catch(() => {
+        setBanner({ kind: "err", reasons: ["Could not load the link to update. It may have been revoked or removed."] });
+      });
+  }, []);
 
   function onLoaded(r: Raw, b: Benchmarks | null, name: string) {
     setRaw(r);
@@ -35,12 +64,20 @@ export default function Page() {
     setTitle(name.replace(/\.(xlsx|xlsm)$/i, ""));
     setSrc("Loaded from " + name + " · parsed in-browser");
     setShare(null);
-    setInsights(undefined);
+    setUpdateDone(false);
+    // In update mode, insights are already seeded from the existing link (or
+    // reset via the checkbox below) — a fresh upload shouldn't clobber that.
+    if (!updateSlug) setInsights(undefined);
     const m = buildModel(r);
     setBanner({ kind: "ok", text: `Loaded ${name}. ${m.props.length} Properties · ${m.objOrder.length} objectives · ${m.metrics.length} sub-metrics · scale 0–${m.scaleMax}${b ? " · benchmarks found" : " · no benchmarks sheet"}. Parsed in your browser.` });
   }
   function onError(reasons: string[]) {
     setBanner({ kind: "err", reasons });
+  }
+
+  function toggleResetInsights(checked: boolean) {
+    setResetInsightsOnUpdate(checked);
+    setInsights(checked ? undefined : carriedInsights);
   }
 
   async function createLink() {
@@ -68,6 +105,28 @@ export default function Page() {
     }
   }
 
+  async function updateLink() {
+    if (!raw || !model || !updateSlug) return;
+    const name = updateClientName || updateSlug;
+    const msg = `${name}: ${oldPropsCount} properties → ${model.props.length} properties. This replaces what the client currently sees.`;
+    if (!confirm(msg)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/share/${updateSlug}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raw, benchmarks, insights: resolveInsights(insights, model) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not update link");
+      setUpdateDone(true);
+    } catch (e) {
+      setBanner({ kind: "err", reasons: [e instanceof Error ? e.message : String(e)] });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function copy(text: string) {
     navigator.clipboard.writeText(text);
   }
@@ -86,6 +145,12 @@ export default function Page() {
         <p className="lede">
           Upload a client's Excel framework using the template, and it will be visualised here. The workbook itself is never uploaded or stored — a client link saves only the derived scores, and only when you create one.
         </p>
+
+        {updateSlug && (
+          <div className="banner info">
+            Updating link for {updateClientName || "…"} — the URL and password will not change.
+          </div>
+        )}
 
         <Uploader onLoaded={onLoaded} onError={onError} />
 
@@ -109,7 +174,32 @@ export default function Page() {
           </div>
         )}
 
-        {model && (
+        {model && updateSlug && (
+          <div className="share-panel">
+            {updateDone ? (
+              <div className="share-result">
+                <p className="share-note">Link updated for {updateClientName}. The URL and password are unchanged.</p>
+                <a className="btn" href="/links">Back to client links</a>
+              </div>
+            ) : (
+              <div className="share-create">
+                <label className="update-reset-check">
+                  <input
+                    type="checkbox"
+                    checked={resetInsightsOnUpdate}
+                    onChange={(e) => toggleResetInsights(e.target.checked)}
+                  />
+                  Reset insights to auto-generated instead of carrying them forward
+                </label>
+                <button className="btn primary" disabled={busy} onClick={updateLink}>
+                  {busy ? "Updating…" : "Update this link"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {model && !updateSlug && (
           <div className="share-panel">
             {share ? (
               <div className="share-result">

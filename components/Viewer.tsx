@@ -14,11 +14,11 @@ type View = "overview" | "rank" | "heat" | "cmp" | "bench";
 
 export default function Viewer({
   raw, benchmarks, title, readOnly = false, footNote = "",
-  clientName, generatedAt, expiresAt,
+  clientName, generatedAt, expiresAt, updatedAt,
   insights, onInsightsChange, onInsightsReset,
 }: {
   raw: Raw; benchmarks: Benchmarks | null; title: string; readOnly?: boolean; footNote?: string;
-  clientName?: string; generatedAt?: string; expiresAt?: string;
+  clientName?: string; generatedAt?: string; expiresAt?: string; updatedAt?: string | null;
   insights?: unknown; onInsightsChange?: (insights: Insight[]) => void; onInsightsReset?: () => void;
 }) {
   const [view, setView] = useState<View>("overview");
@@ -83,6 +83,7 @@ export default function Viewer({
       {readOnly && clientName && (
         <div className="watermark">
           Prepared for {clientName} · Generated {fmtDate(generatedAt)}
+          {updatedAt ? ` · Last updated ${fmtDate(updatedAt)}` : ""}
           {expiresAt ? ` · Expires ${fmtDate(expiresAt)}` : ""}
         </div>
       )}

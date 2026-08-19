@@ -46,6 +46,8 @@ export default async function LinksPage() {
                   <th>Link</th>
                   <th>Created</th>
                   <th>Expires</th>
+                  <th>Version</th>
+                  <th>Updated</th>
                   <th>Views</th>
                   <th>Last viewed</th>
                   <th>Status</th>
@@ -64,10 +66,19 @@ export default async function LinksPage() {
                       <td className="mono">{url}</td>
                       <td className="mono">{fmtDate(link.created_at)}</td>
                       <td className="mono">{fmtDate(link.expires_at)}</td>
+                      <td className="mono">v{link.version || 1}</td>
+                      <td className="mono">{fmtDate(link.updated_at)}</td>
                       <td className="mono">{link.view_count}</td>
                       <td className="mono">{fmtDate(link.last_viewed_at)}</td>
                       <td><span className={`status-badge status-${status.toLowerCase()}`}>{status}</span></td>
-                      <td><LinkRowActions slug={link.slug} url={url} revoked={link.revoked} /></td>
+                      <td>
+                        <LinkRowActions
+                          slug={link.slug}
+                          url={url}
+                          revoked={link.revoked}
+                          hasPrevious={!!link.previous_snapshot}
+                        />
+                      </td>
                     </tr>
                   );
                 })}

@@ -2,9 +2,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function LinkRowActions({ slug, url, revoked }: { slug: string; url: string; revoked: boolean }) {
+export default function LinkRowActions({
+  slug, url, revoked, hasPrevious,
+}: { slug: string; url: string; revoked: boolean; hasPrevious: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [reverting, setReverting] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [newPassword, setNewPassword] = useState<string | null>(null);
 
@@ -26,6 +29,23 @@ export default function LinkRowActions({ slug, url, revoked }: { slug: string; u
       alert(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function revert() {
+    if (!confirm("Revert to the previous version? This replaces what the client currently sees.")) return;
+    setReverting(true);
+    try {
+      const res = await fetch(`/api/share/${slug}/revert`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Could not revert link");
+      }
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    } finally {
+      setReverting(false);
     }
   }
 
@@ -52,6 +72,14 @@ export default function LinkRowActions({ slug, url, revoked }: { slug: string; u
     <>
       <div className="links-actions">
         <button className="btn" onClick={copy}>Copy</button>
+        {!revoked && (
+          <a className="btn" href={`/?update=${slug}`}>Update</a>
+        )}
+        {!revoked && (
+          <button className="btn" onClick={revert} disabled={!hasPrevious || reverting} title={hasPrevious ? undefined : "No previous version to revert to"}>
+            {reverting ? "Reverting…" : "Revert"}
+          </button>
+        )}
         {!revoked && (
           <button className="btn" onClick={resetPassword} disabled={resetting}>
             {resetting ? "Resetting…" : "Reset password"}

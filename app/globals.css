@@ -43,6 +43,7 @@
   .banner{margin-top:12px;border-radius:10px;padding:11px 15px;font-size:13px;display:none}
   .banner.ok{display:block;background:#E9F1EF;color:var(--ink);border:1px solid #CBE0DC}
   .banner.err{display:block;background:#FBEEE3;color:#8A4B18;border:1px solid #EED6BE}
+  .banner.info{display:block;background:var(--paper);color:var(--ink-soft);border:1px solid var(--line)}
   .banner .mono{font-size:12px}
   .banner ul{margin:7px 0 0 18px}
   .banner li{margin:2px 0}
@@ -55,6 +56,7 @@
 
   .share-panel{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
   .share-create{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .update-reset-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-soft)}
   .share-result{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:560px}
   .share-result-row{display:flex;align-items:center;gap:10px;padding:5px 0}
   .share-lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;width:64px;flex-shrink:0}
